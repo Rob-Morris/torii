@@ -995,6 +995,7 @@ pub struct SnapshotOptions {
 
     /// Optional version of the remote snapshot torii version
     #[arg(
+        id = "snapshot_version",
         long = "snapshot.version",
         help = "Optional version of the torii the snapshot has been made from. This is only used to give a warning if there is a version mismatch between the snapshot and this torii."
     )]
