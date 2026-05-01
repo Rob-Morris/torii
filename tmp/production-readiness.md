@@ -81,7 +81,7 @@ That is the runtime fix the research validated end-to-end with a Sepolia replay.
       - engine rollback now calls `reset_token_registry().await?` after clearing models/balances
       - cache unit test covering dropped uncommitted token marks after rollback
 
-- [ ] **3. Deterministic regression test for the rollback path.**
+- [x] **3. Deterministic regression test for the rollback path.**
       The research calls this out explicitly. Without it, the bug regresses on any future
       engine rewrite. Shape:
       - tiny local Katana world with a model that can be additively upgraded
@@ -101,8 +101,11 @@ That is the runtime fix the research validated end-to-end with a Sepolia replay.
         for the token-registry rollback path (`test_rollback_resets_token_registry_for_retry`)
       - that engine test has now passed locally end to end when run with:
         `PATH="$HOME/.asdf/shims:/opt/homebrew/bin:$PATH" KATANA_RUNNER_BIN=/Users/robmorris/Development/Underware/katana/target/debug/katana cargo test -p torii-indexer test_rollback_resets_token_registry_for_retry -- --nocapture`
-      - still missing as fully verified coverage: a matching engine/chunk-level replay regression
-        for the model-cache rollback path
+      - a synthetic engine-level regression now covers the model-cache rollback path without any
+        external Katana dependency:
+        `PATH="$HOME/.asdf/shims:/opt/homebrew/bin:$PATH" cargo test -p torii-indexer test_rollback_replays_model_upgrade_after_cache_reset -- --nocapture`
+      - both engine rollback regressions now pass together with:
+        `PATH="$HOME/.asdf/shims:/opt/homebrew/bin:$PATH" KATANA_RUNNER_BIN=/Users/robmorris/Development/Underware/katana/target/debug/katana cargo test -p torii-indexer test_rollback_ -- --nocapture`
 
       The task-network unit tests added in the WIP cover items (1) and (2) of the runtime
       patch but not the full cache/rollback interaction in items (3) and (4).
@@ -110,11 +113,29 @@ That is the runtime fix the research validated end-to-end with a Sepolia replay.
 - [ ] **4. Verification.**
       - `bash scripts/rust_fmt.sh --fix` clean
       - `PATH="/opt/homebrew/bin:$PATH" bash scripts/clippy.sh` clean
+      - local Dojo fixture state had to be rebuilt for the workspace suite with:
+        - `cd crates/types-test && PATH="$HOME/.asdf/shims:/opt/homebrew/bin:$PATH" sozo build -P dev`
+        - `cd examples/spawn-and-move && PATH="$HOME/.asdf/shims:/opt/homebrew/bin:$PATH" sozo build -P dev`
       - targeted tests now passing:
         - `PATH="$HOME/.asdf/shims:/opt/homebrew/bin:$PATH" cargo test -p torii-cache -p torii-task-network -p torii-processors -- --nocapture`
         - `PATH="$HOME/.asdf/shims:/opt/homebrew/bin:$PATH" KATANA_RUNNER_BIN=/Users/robmorris/Development/Underware/katana/target/debug/katana cargo test -p torii-indexer test_rollback_resets_token_registry_for_retry -- --nocapture`
+        - `PATH="$HOME/.asdf/shims:/opt/homebrew/bin:$PATH" cargo test -p torii-indexer test_rollback_replays_model_upgrade_after_cache_reset -- --nocapture`
+        - `PATH="$HOME/.asdf/shims:/opt/homebrew/bin:$PATH" KATANA_RUNNER_BIN=/Users/robmorris/Development/Underware/katana/target/debug/katana cargo test -p torii-indexer test_rollback_ -- --nocapture`
         - `PATH="$HOME/.asdf/shims:/opt/homebrew/bin:$PATH" KATANA_RUNNER_BIN=/Users/robmorris/Development/Underware/katana/target/debug/katana cargo test -p torii-cache -p torii-task-network -p torii-sqlite model_optional -- --nocapture`
-      - `KATANA_RUNNER_BIN=katana cargo nextest run --all-features --workspace` green
+      - full workspace nextest was re-run with:
+        `PATH="$HOME/.asdf/shims:/opt/homebrew/bin:$PATH" KATANA_RUNNER_BIN=/Users/robmorris/Development/Underware/katana/target/debug/katana cargo nextest run --all-features --workspace`
+        and got past the earlier missing-world-state failures, but still stopped on 8
+        `torii-indexer-fetcher` tests:
+        - `test_fetch_comprehensive_multi_contract_spam_with_selective_indexing_and_ordering_validation`
+        - `test_fetch_pending_basic`
+        - `test_fetch_pending_filters_reverted_transactions`
+        - `test_fetch_pending_multiple_contracts_comprehensive`
+        - `test_fetch_pending_multiple_transactions`
+        - `test_fetch_pending_to_mined_switching_logic`
+        - `test_fetch_pending_with_cursor_continuation`
+        - `test_fetch_pending_with_events_comprehensive`
+        All 8 failed with the same provider-side parse error:
+        `Provider(Other(TransportError(Json(Error("data did not match any variant of untagged enum JsonRpcResponse", line: 0, column: 0)))))`
       - Re-run the patched Sepolia replay from pre-critical head `2262908` per the
         research's "Patched replay" validation; cross the trigger window cleanly.
 
@@ -142,9 +163,13 @@ Files that change for item (2):
 
 ## Status (as of 2026-05-01)
 
-WIP committed: `84ab46a1 wip`, `ff031a09 wip: simplify`.
+WIP committed: `84ab46a1 wip`, `ff031a09 wip: simplify`, `9a0a91a3 wip: harden rollback cache recovery`.
 
-Live worktree now covers items 1 and 2, plus targeted unit tests for the new cache/storage
-paths and a runtime-verified engine-level rollback regression for the token-registry path.
-Remaining blockers are item 3 (completion of model-cache engine-level regression coverage),
-item 4 (full validation suite + replay), and item 5 (commit shaping / PR prep).
+Live worktree now adds the model-cache engine regression on top of the WIP commit snapshot.
+Items 1, 2, and 3 are now covered. Item 4 is partially covered:
+- format, clippy, targeted tests, and both rollback regressions are green
+- full workspace nextest is still blocked by 8 `torii-indexer-fetcher` pending/preconfirmed
+  tests failing on provider JSON-RPC response parsing against the current Katana setup
+- replay validation from the research remains outstanding
+
+Item 5 (commit shaping / PR prep) also remains.

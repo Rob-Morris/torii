@@ -44,10 +44,11 @@ The fix-confirmed replay says the combined patch crossed the bad Sepolia window 
 
 ### Already committed on top of `origin/main`
 
-Local `main` is ahead of `origin/main` / `v1.8.15` by two WIP commits:
+Local `main` is ahead of `origin/main` / `v1.8.15` by three WIP commits:
 
 - `84ab46a1 wip`
 - `ff031a09 wip: simplify`
+- `9a0a91a3 wip: harden rollback cache recovery`
 
 Those commits appear to be the accepted fix for bug class (1) plus the first half of bug class (2):
 
@@ -67,32 +68,23 @@ Notes:
 
 ### Currently uncommitted in the worktree
 
-The live worktree adds the remaining additive hardening for bug class (2) and the related token-cache issue:
+The live worktree now adds the follow-up engine regression for the model-cache rollback path:
 
-- `crates/storage/src/lib.rs`
-  - adds `ReadOnlyStorage::model_optional(...) -> Result<Option<Model>, StorageError>`
-- `crates/sqlite/sqlite/src/storage.rs`
-  - implements `model_optional` with cache-first lookup and `fetch_optional`
-  - keeps `model()` behavior by mapping `None` back to `sqlx::Error::RowNotFound`
-- `crates/processors/src/error.rs`
-  - adds a typed `Error::ModelNotFound(Felt)`
-- 7 processors now use `ctx.storage.model_optional(...)` instead of swallowing any storage error:
-  - `event_message.rs`
-  - `store_del_record.rs`
-  - `store_set_record.rs`
-  - `store_update_member.rs`
-  - `store_update_record.rs`
-  - `upgrade_event.rs`
-  - `upgrade_model.rs`
-- `crates/cache/src/lib.rs`
-  - adds `Cache::reset_token_registry()`
-  - stores `Arc<dyn ReadOnlyStorage>` inside `ErcCache`
-  - repopulates token-registration state from committed storage on rollback
-- `crates/indexer/engine/src/engine.rs`
-  - calls `reset_token_registry().await?` in the rollback arm, so rollback repair failure now
-    aborts instead of logging and continuing
+- `crates/indexer/engine/src/test.rs`
+  - adds `test_rollback_replays_model_upgrade_after_cache_reset`
+  - uses a synthetic world-model upgrade processor plus a one-shot failing processor to prove:
+    - first pass mutates cache and queues `register_model`
+    - rollback drops the SQL but leaves poisoned cache state
+    - `clear_models()` restores retry behavior by forcing `model_optional()` to repopulate from
+      committed sqlite
+    - second pass replays the schema change and lands the new column
 
-This uncommitted delta lines up with items (1) and (2) in `tmp/production-readiness.md`.
+Everything else from items (1) and (2) is already captured in `9a0a91a3`.
+
+The repo-local handoff notes were also updated after the full validation pass:
+
+- `tmp/production-readiness.md`
+- `tmp/future-agent-briefing.md`
 
 ## Review Notes On The Live Worktree
 
@@ -114,29 +106,61 @@ This uncommitted delta lines up with items (1) and (2) in `tmp/production-readin
   - `PATH="$HOME/.asdf/shims:/opt/homebrew/bin:$PATH" KATANA_RUNNER_BIN=/Users/robmorris/Development/Underware/katana/target/debug/katana cargo test -p torii-indexer test_rollback_resets_token_registry_for_retry -- --nocapture`
   - nuance: do not rely on whichever `scarb` happens to be first on `PATH`; the torii test
     fixture path needs the versions from `torii/.tool-versions`
+- `cargo test -p torii-indexer test_rollback_replays_model_upgrade_after_cache_reset` passed:
+  - `PATH="$HOME/.asdf/shims:/opt/homebrew/bin:$PATH" cargo test -p torii-indexer test_rollback_replays_model_upgrade_after_cache_reset -- --nocapture`
+- both rollback regressions pass together:
+  - `PATH="$HOME/.asdf/shims:/opt/homebrew/bin:$PATH" KATANA_RUNNER_BIN=/Users/robmorris/Development/Underware/katana/target/debug/katana cargo test -p torii-indexer test_rollback_ -- --nocapture`
 - `bash scripts/rust_fmt.sh --fix` passed.
 - `PATH="/opt/homebrew/bin:$PATH" bash scripts/clippy.sh` passed.
 - targeted package-level tests also passed under the repo-pinned torii toolchain:
   - `PATH="$HOME/.asdf/shims:/opt/homebrew/bin:$PATH" cargo test -p torii-cache -p torii-task-network -p torii-processors -- --nocapture`
   - `PATH="$HOME/.asdf/shims:/opt/homebrew/bin:$PATH" KATANA_RUNNER_BIN=/Users/robmorris/Development/Underware/katana/target/debug/katana cargo test -p torii-cache -p torii-task-network -p torii-sqlite model_optional -- --nocapture`
+- targeted `torii-indexer` test lint also passed:
+  - `PATH="/opt/homebrew/bin:$PATH" cargo +nightly-2025-05-01 clippy -p torii-indexer --tests -- -D warnings -D future-incompatible -D nonstandard-style -D rust-2018-idioms -D unused -D missing-debug-implementations -A clippy::uninlined_format_args`
+- full workspace `nextest` got past the earlier local Dojo fixture failures after rebuilding:
+  - `cd crates/types-test && PATH="$HOME/.asdf/shims:/opt/homebrew/bin:$PATH" sozo build -P dev`
+  - `cd examples/spawn-and-move && PATH="$HOME/.asdf/shims:/opt/homebrew/bin:$PATH" sozo build -P dev`
+  - rerun command:
+    `PATH="$HOME/.asdf/shims:/opt/homebrew/bin:$PATH" KATANA_RUNNER_BIN=/Users/robmorris/Development/Underware/katana/target/debug/katana cargo nextest run --all-features --workspace`
+  - the rollback regressions, GraphQL tests, and broader workspace surface passed through that run
+  - the remaining failures were confined to 8 `torii-indexer-fetcher` pending/preconfirmed tests,
+    all failing with the same provider parse error:
+    `Provider(Other(TransportError(Json(Error("data did not match any variant of untagged enum JsonRpcResponse", line: 0, column: 0)))))`
 
 ### Things I would challenge before upstreaming
 
-1. There is still no verified deterministic regression test for the model-cache rollback path.
-   - Research explicitly recommends a tiny local world / same-chunk upgrade-plus-failure test.
-   - The current engine regression now covers the token-registry half of rollback hardening.
-
-2. The two local WIP commits are not yet PR-shaped.
+1. The three local WIP commits are not yet PR-shaped.
    - The final upstream series should be split into logical units and should drop unrelated changes.
+
+2. The new model-cache regression is synthetic rather than built from a real `ModelUpgraded`
+   world event.
+   - It does exercise the real engine/storage/cache rollback path and directly proves the cache
+     poison failure mode that motivated the fix.
+   - If extra realism is desired before upstreaming, replace it later with a fixture-driven
+     world upgrade replay; that is confidence-building, not required to keep deterministic
+     regression coverage.
+
+3. Full workspace validation is not green yet, but the remaining failures are no longer in the
+   rollback patch surface.
+   - The 8 failures are all under `crates/indexer/fetcher/src/test.rs`.
+   - They all share the same `JsonRpcResponse` parse failure against the current Katana/provider
+     setup.
+   - Treat that as a separate integration blocker to investigate rather than evidence against the
+     rollback fix itself.
 
 ## Suggested Next Steps
 
-1. Add the deterministic model-cache rollback regression described in the research.
-2. Re-run validation:
-   - `bash scripts/rust_fmt.sh --fix`
-   - `PATH="/opt/homebrew/bin:$PATH" bash scripts/clippy.sh`
-   - `KATANA_RUNNER_BIN=katana cargo nextest run --all-features --workspace`
-   - replay validation from the known Sepolia pre-critical head (`2262908`)
+1. Investigate the remaining `torii-indexer-fetcher` failures from the workspace `nextest` run.
+   - failing tests:
+     - `test_fetch_comprehensive_multi_contract_spam_with_selective_indexing_and_ordering_validation`
+     - `test_fetch_pending_basic`
+     - `test_fetch_pending_filters_reverted_transactions`
+     - `test_fetch_pending_multiple_contracts_comprehensive`
+     - `test_fetch_pending_multiple_transactions`
+     - `test_fetch_pending_to_mined_switching_logic`
+     - `test_fetch_pending_with_cursor_continuation`
+     - `test_fetch_pending_with_events_comprehensive`
+2. Run replay validation from the known Sepolia pre-critical head (`2262908`).
 3. Repackage the work into clean upstream commits:
    - task-manager / task-network dependency fix
    - rollback cache repair + `model_optional`
@@ -148,21 +172,9 @@ This uncommitted delta lines up with items (1) and (2) in `tmp/production-readin
 Worktree status during this review:
 
 - modified:
-  - `crates/cache/src/lib.rs`
-  - `crates/indexer/engine/src/engine.rs`
-  - `crates/processors/src/error.rs`
-  - `crates/processors/src/processors/event_message.rs`
-  - `crates/processors/src/processors/store_del_record.rs`
-  - `crates/processors/src/processors/store_set_record.rs`
-  - `crates/processors/src/processors/store_update_member.rs`
-  - `crates/processors/src/processors/store_update_record.rs`
-  - `crates/processors/src/processors/upgrade_event.rs`
-  - `crates/processors/src/processors/upgrade_model.rs`
-  - `crates/processors/src/task_manager.rs`
-  - `crates/sqlite/sqlite/src/storage.rs`
-  - `crates/storage/src/lib.rs`
-- untracked:
-  - `tmp/`
+  - `crates/indexer/engine/src/test.rs`
+  - `tmp/future-agent-briefing.md`
+  - `tmp/production-readiness.md`
 
 This briefing was written after reviewing:
 
