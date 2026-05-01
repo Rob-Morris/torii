@@ -994,6 +994,8 @@ pub struct SnapshotOptions {
     pub url: Option<String>,
 
     /// Optional version of the remote snapshot torii version
+    // Keep a distinct clap arg ID here so this field does not collide with the
+    // top-level built-in `version` flag while still exposing `--snapshot.version`.
     #[arg(
         id = "snapshot_version",
         long = "snapshot.version",

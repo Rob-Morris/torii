@@ -4,8 +4,10 @@ Items identified during the cache-poison-on-rollback investigation that are real
 wins but should not block the production PR. Each entry includes a short rationale so a
 follow-up author can pick them up.
 
-References: research at `~/Development/Underware/pistols/torii-emulator/docs/shaping/research/torii-skipped-model-upgrades.md`,
-section "Appendix C — Alternative and rejected fix approaches".
+References:
+- research at `~/Development/Underware/pistols/torii-emulator/docs/shaping/research/torii-skipped-model-upgrades.md`
+- rejected / emergency-only ideas moved to `tmp/rejected-approaches.md`
+- prioritization and sequencing guidance moved to `tmp/out-of-scope-priority-guide.md`
 
 ## 1. Make `StorageError` a typed enum (workspace refactor)
 
@@ -82,30 +84,67 @@ removes another source of schema/state divergence.
 Why later: lower-confidence; the captured failure was about cache poisoning, not about the
 reader pulling a wrong snapshot. Worth a focused experiment, not blocking the rollback fix.
 
-## 6. F7 — generic "ignore unknown enum selector" parser patch
-
-Explicitly **not recommended** in the research. Once enum decoding accepts an unknown
-selector, torii no longer knows how many felts to consume for the variant payload. For
-unit variants this might appear harmless; for payload-bearing variants it desynchronizes
-the rest of the decode stream and creates harder-to-debug corruption.
-
-Listed only so a future contributor doesn't re-propose it.
-
-## 7. Tracing-field hex-format helper
+## 6. Tracing / logging hygiene around selector formatting and cache misses
 
 The `format!("{:#x}", felt)` pattern appears across roughly 30 call sites in
 `crates/processors/`, including the diagnostic logs added in the WIP. A small helper
 (`fn hex(f: Felt) -> String` or `fn hex_args(...) -> impl Display`) would deduplicate the
 boilerplate and avoid the eager allocation cost in tracing fields.
 
-Why later: pure cleanup, orthogonal to the bug. The current code already follows the
-established convention in `crates/processors/src/erc.rs`.
+This also pairs naturally with the pre-existing `model_optional` cache-miss `warn!` in
+`crates/sqlite/sqlite/src/storage.rs:72-77`, which eagerly formats the selector and logs
+every cache miss at warning level. After rollback the cache is intentionally cold, so a
+follow-up cleanup could:
 
-## 8. Combined `Cache::clear_all()` for rollback
+- switch the selector field to `%selector` for lazy formatting
+- demote the log to `debug!` if "cache miss after rollback" is considered normal
+- optionally reuse the same helper for the remaining eager hex-format call sites
 
-Engine rollback currently calls three separate cache-reset methods. A single
+Why later: pure observability / cleanup work, not a correctness fix. The current code
+already follows the established convention in `crates/processors/src/erc.rs`.
+
+## 7. Centralize rollback cache recovery API
+
+Engine rollback currently calls three separate cache-reset methods in order:
+`clear_balances_diff` + `clear_models` + `reset_token_registry`. A single
 `Cache::reset_to_committed_storage()` would centralize the rollback-aware semantics so a
 future cache field is harder to forget about.
 
-Why later: ergonomic refactor; semantically equivalent to today's call list once item (2)
-in `production-readiness.md` lands. Worth doing, but trivially fix-forwardable later.
+This would also let the engine regression tests call the same recovery path instead of
+recreating the sequence inline, which reduces the chance of test drift if rollback
+recovery grows a fourth step later.
+
+As part of the same refactor, `ErcCache.storage: Arc<dyn ReadOnlyStorage>` could be
+reconsidered. Today that field exists purely so `reset_token_registry(&self)` can call
+`storage.token_ids()` later. If the reset path were centralized, the trait shape could
+instead pass read-only storage into the reset call directly and keep the cache struct a
+little narrower.
+
+Why later: maintainability improvement, not a correctness fix. The current explicit
+rollback sequence is short, readable, and already correct for this PR.
+
+## 8. Shared `task_identifier` hashing helper
+
+Every event processor reimplements the same `DefaultHasher` over `(from_address, key)`
+pattern in its `task_identifier` / `task_dependencies` impls
+(`crates/processors/src/processors/{store_set_record,store_del_record,store_update_record,store_update_member,upgrade_event,upgrade_model,event_message}.rs`).
+The new rollback regression test in `crates/indexer/engine/src/test.rs` had to recreate
+the same shape as `hashed_task_identifier`. Extract a single
+`pub fn hash_task_id(parts: &[Felt]) -> TaskId` next to `TaskId` in
+`crates/processors/src/task_manager.rs` and rewrite all call sites.
+
+Why later: touches every event-processor file as a separate refactor; out of scope for the
+rollback PR but a natural follow-up.
+
+## 9. Shared `ReadOnlyStorage` test stub
+
+The new rollback work introduced two near-identical full-trait stubs:
+`StubStorage` in `crates/cache/src/lib.rs` tests and `EmptyStorage` in
+`crates/sqlite/sqlite/src/storage.rs` tests. Both hand-roll all 17 `ReadOnlyStorage`
+methods with `unimplemented!()` for the long tail. Promote a shared
+`pub mod testing { pub struct StubReadOnlyStorage { ... } }` (gated on
+`#[cfg(any(test, feature = "testing"))]`) in `crates/storage` so future test crates do
+not need to re-stub the whole trait every time it grows.
+
+Why later: feature-gated test surface change touching `torii_storage`; orthogonal to
+rollback recovery.

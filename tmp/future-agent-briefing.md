@@ -8,6 +8,12 @@ Produce upstream-ready torii patches for the two confirmed bug classes from the 
 
 The upstream target is a PR against torii that is ready for review, not another research-only or diagnostics-only branch.
 
+Keep the patch narrow:
+- fix the two confirmed bug classes
+- keep tightly-related non-breaking hardening that directly supports those fixes
+- do not broaden into unrelated fetcher/provider cleanup or general torii refactors just because
+  they showed up during local validation
+
 ## Primary Sources
 
 - Repo notes:
@@ -126,6 +132,42 @@ The repo-local handoff notes were also updated after the full validation pass:
   - the remaining failures were confined to 8 `torii-indexer-fetcher` pending/preconfirmed tests,
     all failing with the same provider parse error:
     `Provider(Other(TransportError(Json(Error("data did not match any variant of untagged enum JsonRpcResponse", line: 0, column: 0)))))`
+- replay validation from the research was re-run successfully against the cleaned-up patch shape:
+  - source pre-critical DB:
+    `/private/tmp/pistols-torii-repro-patched.VuJ2O7/torii.db`
+  - confirmed pre-run state:
+    - world head `2262908`
+    - `Config|0|0`
+    - `PlayerActivityEvent|0|0`
+  - copied replay DB:
+    `/private/tmp/pistols-torii-repro-recheck.l0J0eM`
+  - config:
+    `/Users/robmorris/Development/Underware/pistols/dojo/torii_sepolia_repro.toml`
+  - run command:
+    `PATH="$HOME/.asdf/shims:/opt/homebrew/bin:$PATH" RUST_LOG=info ./target/debug/torii --config /Users/robmorris/Development/Underware/pistols/dojo/torii_sepolia_repro.toml --db-dir /private/tmp/pistols-torii-repro-recheck.l0J0eM`
+  - observed replay milestones:
+    - crossed `2273149`
+    - crossed `2283390`
+    - crossed `2303872`
+  - post-run state:
+    - `pistols-Config` gained `realms_address`
+    - `pistols-PlayerActivityEvent` DDL now includes `EnlistedRankedDuelist`
+    - `models` rows now report:
+      - `Config|1|0`
+      - `PlayerActivityEvent|0|1`
+    - no `InvalidEnumSelector` appeared in the captured replay logs
+  - discrepancy resolved:
+    - the temporary `2`-row `EnlistedRankedDuelist` count came from the current-state
+      `[pistols-PlayerActivityEvent]` table
+    - current event-message rows are keyed by `poseidon_hash_many(keys)` and updated in place via
+      `ON CONFLICT(id) DO UPDATE`, so later events for the same player/key can replace the
+      current `activity`
+    - by the end of replay, those current rows had advanced to `ChallengeCreated`, so the final
+      current table correctly showed `0` enlisted rows
+    - the append-only proof is in `event_messages_historical`, which now contains `7`
+      persisted `PlayerActivityEvent` rows with `EnlistedRankedDuelist` in their JSON payload
+    - this was only a validation-surface misunderstanding during the replay review, not a torii
+      runtime issue and not a reason to change the patch
 
 ### Things I would challenge before upstreaming
 
@@ -145,34 +187,40 @@ The repo-local handoff notes were also updated after the full validation pass:
    - The 8 failures are all under `crates/indexer/fetcher/src/test.rs`.
    - They all share the same `JsonRpcResponse` parse failure against the current Katana/provider
      setup.
-   - Treat that as a separate integration blocker to investigate rather than evidence against the
-     rollback fix itself.
+   - They reproduce on clean `origin/main`, so treat them as pre-existing validation noise for
+     this patch series rather than evidence against the rollback fix itself.
+   - Do not expand this PR into `crates/indexer/fetcher` work.
+
+4. Small cleanup pass result:
+   - keep the one-line `snapshot.version` arg ID change in `crates/cli/src/options.rs`
+     because it avoids a clap arg-ID collision with the top-level built-in `version` flag
+   - a new CLI test now guards that:
+     `args::test::test_clap_definition_is_valid`
+   - `TaskNetwork::contains_key` was unused and has been removed
 
 ## Suggested Next Steps
 
-1. Investigate the remaining `torii-indexer-fetcher` failures from the workspace `nextest` run.
-   - failing tests:
-     - `test_fetch_comprehensive_multi_contract_spam_with_selective_indexing_and_ordering_validation`
-     - `test_fetch_pending_basic`
-     - `test_fetch_pending_filters_reverted_transactions`
-     - `test_fetch_pending_multiple_contracts_comprehensive`
-     - `test_fetch_pending_multiple_transactions`
-     - `test_fetch_pending_to_mined_switching_logic`
-     - `test_fetch_pending_with_cursor_continuation`
-     - `test_fetch_pending_with_events_comprehensive`
-2. Run replay validation from the known Sepolia pre-critical head (`2262908`).
-3. Repackage the work into clean upstream commits:
+1. Repackage the work into clean upstream commits now that the replay validation has been rerun.
    - task-manager / task-network dependency fix
    - rollback cache repair + `model_optional`
    - token-registry rollback hardening
    - regression tests
+2. Keep the PR scoped.
+   - Leave `crates/indexer/fetcher` alone for this fix series.
+   - If validation notes mention the 8 failing fetcher tests, explicitly say they reproduce on
+     clean `origin/main` and are out of scope for this patch.
+3. Do not spend more time on the `EnlistedRankedDuelist` row-presence discrepancy unless someone
+   reopens the question; it was explained by current-state overwrite semantics and the historical
+   proof is already present in `event_messages_historical`.
 
 ## File/State Snapshot
 
 Worktree status during this review:
 
 - modified:
-  - `crates/indexer/engine/src/test.rs`
+  - `crates/cli/src/args.rs`
+  - `crates/cli/src/options.rs`
+  - `crates/task-network/src/lib.rs`
   - `tmp/future-agent-briefing.md`
   - `tmp/production-readiness.md`
 
