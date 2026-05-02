@@ -4,16 +4,16 @@ Draft PR packets that bundle one or more assigned task notes.
 
 Structure:
 
-- one folder per draft PR: `pr-<slug>/`
+- one folder per draft PR: `NN-pr-<slug>/`
 - one reusable template packet: `pr-template/`
 
 Each draft PR folder should contain:
 
 - `README.md`
-  - branch, status, and scope
+  - ship order, dependency, branch, status, upstream target, promotion target, and scope
 - `pr-notes.md`
   - working dossier for the bundle: raw material for PR wording, local notes, scope,
-    exclusions, validation, and open questions
+    exclusions, validation, open questions, and promotion notes
 - `pr-wording.md`
   - draft PR title/body wording
 - `tasks/`
@@ -26,11 +26,32 @@ Task relationship:
 
 How to start a new draft PR packet:
 
-1. Duplicate `pr-template/` to `pr-<slug>/`
-2. Fill in `README.md` with branch, status, and scope
-3. Move the assigned task notes into `pr-<slug>/tasks/`
-4. Use `pr-notes.md` as the working dossier for the draft PR
-5. Use `pr-wording.md` for draft PR title/body text
+1. Duplicate `pr-template/` to `NN-pr-<slug>/`
+2. Assign the next ship-order number in the folder name
+3. Fill in `README.md` with ship order, dependency, branch, status, upstream target, promotion target, and scope
+4. Move the assigned task notes into `NN-pr-<slug>/tasks/`
+5. Use `pr-notes.md` as the working dossier for the draft PR
+6. Use `pr-wording.md` for draft PR title/body text
+
+Ordering:
+
+- use the numeric prefix to show the intended ship order for draft PR packets
+- record `depends on` in the packet `README.md` when a PR is blocked on another PR or merge
+- use both when needed:
+  - numeric prefix for queue order
+  - `depends on` for actual merge dependency
+
+Promotion tracking:
+
+- use the packet `README.md` to show, at a glance:
+  - intended upstream branch
+  - current shipping state
+  - intended upstream target
+  - exact commit or range to promote later
+- use `pr-notes.md` to record the mechanical promotion plan:
+  - which upstream dependency or merge is being waited on
+  - the exact commit or range to cherry-pick
+  - any temporary extracted branch/worktree that exists for local validation
 
 PR wording guidance:
 

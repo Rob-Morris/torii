@@ -2,14 +2,29 @@
 
 ## Branch
 
-- intended branch: `refactor/centralize-rollback-cache-recovery`
-- current working branch: `wip/pistols-local-notes`
-- likely base branch: `fix/pistols-skipped-model-upgrades`
+- intended upstream branch: `refactor/centralize-rollback-cache-recovery`
+- current integration branch: `wip/rob`
+- temporary extracted branch used for local validation: `refactor/centralize-rollback-cache-recovery` (removed after validation)
 
 ## Status
 
 - draft packet created
-- code implemented locally, not yet split onto a dedicated PR branch
+- code committed on `wip/rob` as `772f8216`
+- ready to promote upstream after `dojoengine/torii#428` merges
+- upstream PR not opened yet because the natural base branch is not yet mergeable to `main`
+
+## Ordering
+
+- ship order: `01`
+- blocked on `dojoengine/torii#428`
+
+## Promotion
+
+- wait for `dojoengine/torii#428` to merge
+- branch from fresh `origin/main`
+- cherry-pick `772f8216`
+- push `refactor/centralize-rollback-cache-recovery`
+- open the upstream PR against `dojoengine/torii:main`
 
 ## Context
 

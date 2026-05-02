@@ -12,7 +12,7 @@ work from local branches after PR `#428`.
 - `fix/pistols-skipped-model-upgrades`
   - upstream PR branch for `https://github.com/dojoengine/torii/pull/428`
   - keep stable; do not mix new local-only work into it
-- `wip/pistols-local-notes`
+- `wip/rob`
   - local continuation branch
   - preferred branch for further investigation, note-taking, and follow-up experiments
 
@@ -48,9 +48,9 @@ decision to upstream them:
 
 ## PR process
 
-- Do new work on `wip/pistols-local-notes`, not on the open PR branch.
+- Do new work on `wip/rob`, not on the open PR branch.
 - When a follow-up is ready, create a fresh PR branch from `origin/main` or another deliberate
-  base, then create a draft PR packet under `.dev.local/wip/prs/pr-<slug>/`, move the assigned
+  base, then create a draft PR packet under `.dev.local/wip/prs/NN-pr-<slug>/`, move the assigned
   task notes into its `tasks/` folder, and port only the intended code changes.
 - Before opening a PR, verify that `git diff --name-only` does not include:
   - `.dev.local/`

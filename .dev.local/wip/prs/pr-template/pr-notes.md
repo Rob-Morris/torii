@@ -10,6 +10,14 @@
 
 - TODO: current state of this draft PR packet.
 
+## Ordering
+
+- TODO: intended ship order for this PR and any blocking dependency on earlier PRs or merges.
+
+## Promotion
+
+- TODO: exact commit or range to promote later, what upstream dependency this PR is waiting on if any, and how it should be pushed/opened when ready.
+
 ## Context
 
 - TODO: local context, dependencies, related PRs/issues, or anything else that matters while shaping this PR.
