@@ -1,7 +1,7 @@
 # T009 — Typed `StorageError` enum
 
 Status:
-- queue: `02-later`
+- queue: `01-next`
 
 Summary:
 - replace boxed dynamic storage errors with a typed enum across the storage surface
@@ -12,7 +12,7 @@ Why this task exists:
 - a typed enum would make storage failure handling explicit and would likely remove the need for
   `model_optional()`
 
-Why later:
+Why next:
 - touches the whole storage call surface
-- valuable, but much broader than the bugfix follow-up path
-- deserves its own planning pass
+- valuable enough to queue ahead of the more speculative replay-hardening ideas
+- broad enough that it still deserves its own planning pass before implementation

@@ -4,8 +4,8 @@ This file is for local continuation work only. It is not upstream PR material.
 
 ## Purpose
 
-Use this when continuing the skipped-model-upgrades investigation or related follow-up
-work from local branches after PR `#428`.
+Use this when continuing local follow-up work around upstream PR `#428` and the queued
+follow-up PR packets on local branches.
 
 ## Branch roles
 
@@ -29,6 +29,7 @@ Read these in order before changing scope or preparing another PR:
 Then:
 
 - review the task files in `.dev.local/wip/00-first/` before changing scope
+- if `00-first/` is empty, continue with `.dev.local/wip/01-next/`
 - consult the currently relevant shipped PR packet from `.dev.local/shipped/` if a task note points
   you there
 - if expanding scope or proposing a different follow-up, consult:
@@ -49,9 +50,14 @@ decision to upstream them:
 ## PR process
 
 - Do new work on `wip/rob`, not on the open PR branch.
-- When a follow-up is ready, create a fresh PR branch from `origin/main` or another deliberate
-  base, then create a draft PR packet under `.dev.local/wip/prs/NN-pr-<slug>/`, move the assigned
-  task notes into its `tasks/` folder, and port only the intended code changes.
+- When one or more tasks become a real follow-up PR unit, create a draft PR packet under
+  `.dev.local/wip/prs/NN-pr-<slug>/` and move the assigned task notes into its `tasks/` folder.
+- Keep each future PR unit as one clear code commit on `wip/rob` where practical.
+- Record that code commit as the packet's promotion target in a separate notes-only commit so the
+  promotion SHA stays stable.
+- When the follow-up is ready to push, create a fresh PR branch from `origin/main` or another
+  deliberate base, cherry-pick the recorded promotion commit, and port only the intended code
+  changes.
 - Before opening a PR, verify that `git diff --name-only` does not include:
   - `.dev.local/`
   - `AGENTS.local.md`
@@ -63,4 +69,4 @@ decision to upstream them:
 - The current upstream fix is intentionally narrow.
 - `.dev.local/wip/` holds the current local task queue and follow-up notes.
 - `.dev.local/research/` holds research documents.
-- `.dev.local/shipped/` holds shipped PR packets.
+- `.dev.local/shipped/` holds upstream PR packets that have already been pushed upstream.

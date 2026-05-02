@@ -1,7 +1,8 @@
 # T007 — Shared task identifier hashing helper
 
 Status:
-- queue: `03-pr-task-identifier-hashing-helper`
+- assigned PR: `03-pr-task-identifier-hashing-helper`
+- state: `draft`
 
 Summary:
 - extract a shared helper for the repeated `(from_address, key)` task-identifier hashing pattern

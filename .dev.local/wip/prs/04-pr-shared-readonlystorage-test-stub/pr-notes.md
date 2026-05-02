@@ -10,8 +10,9 @@
 ## Status
 
 - draft packet created
-- code changes ready on `wip/rob`
+- code committed on `wip/rob` as `2c25e6cf`
 - targeted validation passed locally
+- queued behind `01`, `02`, and `03` for later promotion
 
 ## Ordering
 
@@ -20,9 +21,8 @@
 
 ## Promotion
 
-- wait for the code commit on `wip/rob`
 - branch from fresh `origin/main`
-- cherry-pick the recorded T008 code commit
+- cherry-pick `2c25e6cf`
 - push `refactor/shared-readonlystorage-test-stub`
 - open the upstream PR against `dojoengine/torii:main`
 
@@ -38,13 +38,13 @@
 
 ## What Changed
 
-- add a shared `ReadOnlyStorage` test stub in `torii-storage`
+- add a shared minimal `ReadOnlyStorage` test stub in `torii-storage`
 - make it available to dependent tests via a `test-utils` feature
 - switch cache and sqlite tests to the shared helper
 
 ## Consequences
 
-- cache and sqlite tests will share one stub implementation for `models`, `model_optional`, and `token_ids`
+- cache and sqlite tests will share one stub implementation for the minimal `ReadOnlyStorage` surface they currently exercise
 - future `ReadOnlyStorage` trait changes should only need one stub update instead of duplicated edits in each crate
 - no intended production behavior change
 

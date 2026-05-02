@@ -1,7 +1,7 @@
 # T005 — Centralize rollback cache recovery API
 
 Status:
-- assigned PR: `pr-centralize-rollback-cache-recovery-api`
+- assigned PR: `01-pr-centralize-rollback-cache-recovery-api`
 - state: `draft`
 
 Summary:

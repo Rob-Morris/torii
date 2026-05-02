@@ -4,6 +4,7 @@ This document records the final local validation and scope for upstream PR `#428
 
 - PR URL: `https://github.com/dojoengine/torii/pull/428`
 - PR branch: `fix/pistols-skipped-model-upgrades`
+- Current state: `open upstream PR awaiting merge`
 - Opened: `2026-05-02`
 
 Source documents:
@@ -140,6 +141,7 @@ From the perspective of PR `#428`, the shipped PR work is complete:
 - the patch was narrowed to the two confirmed bug classes
 - the branch was shaped and pushed
 - the PR was opened
+- the upstream PR remains open and waiting on review / merge
 - targeted validation passed
 - replay validation passed
 - remaining workspace noise is documented as pre-existing and out of scope

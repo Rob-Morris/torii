@@ -47,11 +47,13 @@ Promotion tracking:
   - intended upstream branch
   - current shipping state
   - intended upstream target
-  - exact commit or range to promote later
+  - exact code commit or range to promote later
 - use `pr-notes.md` to record the mechanical promotion plan:
   - which upstream dependency or merge is being waited on
-  - the exact commit or range to cherry-pick
+  - the exact code commit or range to cherry-pick
   - any temporary extracted branch/worktree that exists for local validation
+- keep packet-metadata updates in a separate notes-only commit where practical so the promotion
+  target remains the code commit for that PR unit
 
 PR wording guidance:
 

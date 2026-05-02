@@ -16,7 +16,7 @@
 
 ## Promotion
 
-- TODO: exact commit or range to promote later, what upstream dependency this PR is waiting on if any, and how it should be pushed/opened when ready.
+- TODO: exact code commit or range to promote later, what upstream dependency this PR is waiting on if any, and how it should be pushed/opened when ready. Do not point this at packet-metadata-only commits.
 
 ## Context
 

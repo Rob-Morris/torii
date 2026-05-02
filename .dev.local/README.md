@@ -11,7 +11,7 @@ Subfolders:
 - `research/`
   - research documents with date-prefixed filenames
 - `shipped/`
-  - shipped upstream PR packets
+  - PR packets already pushed upstream as real PRs, whether or not they are merged yet
 
 Conventions:
 
@@ -23,9 +23,9 @@ Conventions:
     - `pr-template/`
       - reusable template for a new draft PR packet
 - each task note keeps a stable `T###` identifier and can move between priority buckets
-- `shipped/` contains one folder per shipped PR:
+- `shipped/` contains one folder per upstream PR packet that has already been pushed upstream:
   - `pr-<number>/`
-- each shipped PR folder should contain:
+- each upstream PR packet folder should contain:
   - `README.md`
   - `pr-notes.md`
   - `pr-wording.md`

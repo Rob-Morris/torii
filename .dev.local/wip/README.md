@@ -39,7 +39,7 @@ Task procedure:
 5. Use the draft PR packet to track bundle-level notes, wording, and scope.
 6. If a task is removed from that draft PR, move it back into the appropriate priority bucket or
    into `90-rejected/`.
-7. When that PR ships, move or recreate the finalized PR packet under
+7. When that PR is pushed upstream, move or recreate the finalized PR packet under
    `.dev.local/shipped/pr-<number>/`.
 
 WIP PR packet structure:

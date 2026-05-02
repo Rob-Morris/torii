@@ -12,7 +12,7 @@
 
 ## What Changed
 
-- Added a shared `ReadOnlyStorage` test stub to `torii-storage`.
+- Added a shared minimal `ReadOnlyStorage` test stub to `torii-storage`.
 - Exposed it to dependent tests through a `test-utils` feature.
 - Switched the cache and sqlite tests that used local stubs to the shared helper.
 
@@ -25,7 +25,7 @@
 
 ### Consequences
 
-- Cache and sqlite tests now share one stub implementation for the small `ReadOnlyStorage` surface they exercise.
+- Cache and sqlite tests now share one stub implementation for the minimal `ReadOnlyStorage` surface they exercise.
 - Future trait-shape changes should only need one stub update instead of duplicated edits in both crates.
 - No intended production behavior change.
 
