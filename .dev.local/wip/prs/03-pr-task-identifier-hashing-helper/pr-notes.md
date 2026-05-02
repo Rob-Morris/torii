@@ -10,8 +10,9 @@
 ## Status
 
 - draft packet created
-- code implemented on `wip/rob`
+- code committed on `wip/rob` as `3898baad`
 - targeted validation passed locally
+- queued behind `01` and `02` for later promotion
 
 ## Ordering
 
@@ -20,7 +21,10 @@
 
 ## Promotion
 
-- promotion target to be recorded once the code is committed cleanly on `wip/rob`
+- branch from fresh `origin/main`
+- cherry-pick `3898baad`
+- push `refactor/task-identifier-hashing-helper`
+- open the upstream PR against `dojoengine/torii:main`
 
 ## Context
 
