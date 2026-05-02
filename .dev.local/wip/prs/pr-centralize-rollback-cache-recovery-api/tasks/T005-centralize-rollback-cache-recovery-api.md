@@ -1,7 +1,8 @@
 # T005 — Centralize rollback cache recovery API
 
 Status:
-- queue: `00-first`
+- assigned PR: `pr-centralize-rollback-cache-recovery-api`
+- state: `draft`
 
 Summary:
 - replace the current explicit rollback reset sequence with a single rollback-recovery API such as
