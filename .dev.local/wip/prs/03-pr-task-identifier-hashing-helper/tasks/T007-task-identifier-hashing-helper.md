@@ -1,7 +1,7 @@
 # T007 — Shared task identifier hashing helper
 
 Status:
-- queue: `01-next`
+- queue: `03-pr-task-identifier-hashing-helper`
 
 Summary:
 - extract a shared helper for the repeated `(from_address, key)` task-identifier hashing pattern
