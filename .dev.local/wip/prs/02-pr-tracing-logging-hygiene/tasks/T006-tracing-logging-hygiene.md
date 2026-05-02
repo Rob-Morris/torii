@@ -1,7 +1,7 @@
 # T006 — Tracing and logging hygiene
 
 Status:
-- queue: `01-next`
+- queue: `02-pr-tracing-logging-hygiene`
 
 Summary:
 - clean up repeated selector hex formatting and reduce eager-format/cache-miss logging noise
