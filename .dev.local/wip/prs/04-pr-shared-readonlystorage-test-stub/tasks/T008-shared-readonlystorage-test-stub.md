@@ -1,7 +1,7 @@
 # T008 — Shared `ReadOnlyStorage` test stub
 
 Status:
-- queue: `01-next`
+- queue: `04-pr-shared-readonlystorage-test-stub`
 
 Summary:
 - add a shared test stub for `ReadOnlyStorage` instead of restubbing the full trait in each crate

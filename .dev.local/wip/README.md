@@ -33,8 +33,9 @@ Task procedure:
 1. Capture a new follow-up as a task file in the appropriate priority bucket.
 2. Move the task between `00-first/`, `01-next/`, `02-later/`, and `90-rejected/` as priorities
    change.
-3. When one or more tasks become real PR work, create a draft PR packet under `prs/pr-<slug>/`.
-4. Move the assigned task notes into `prs/pr-<slug>/tasks/`.
+3. When one or more tasks become real PR work, create a draft PR packet under
+   `prs/NN-pr-<slug>/`.
+4. Move the assigned task notes into `prs/NN-pr-<slug>/tasks/`.
 5. Use the draft PR packet to track bundle-level notes, wording, and scope.
 6. If a task is removed from that draft PR, move it back into the appropriate priority bucket or
    into `90-rejected/`.
@@ -43,11 +44,11 @@ Task procedure:
 
 WIP PR packet structure:
 
-- `prs/pr-<slug>/README.md`
+- `prs/NN-pr-<slug>/README.md`
   - branch, status, and scope
-- `prs/pr-<slug>/pr-notes.md`
+- `prs/NN-pr-<slug>/pr-notes.md`
   - detailed notes for the bundle
-- `prs/pr-<slug>/pr-wording.md`
+- `prs/NN-pr-<slug>/pr-wording.md`
   - draft PR title/body wording
-- `prs/pr-<slug>/tasks/`
+- `prs/NN-pr-<slug>/tasks/`
   - the assigned task notes included in that draft PR
