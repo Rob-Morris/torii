@@ -10,8 +10,9 @@
 ## Status
 
 - draft packet created
-- code implemented on `wip/rob`
+- code committed on `wip/rob` as `dab4e508`
 - targeted validation passed locally
+- queued behind `01` for later promotion
 
 ## Ordering
 
@@ -20,7 +21,10 @@
 
 ## Promotion
 
-- promotion target to be recorded once the code is committed cleanly on `wip/rob`
+- branch from fresh `origin/main`
+- cherry-pick `dab4e508`
+- push `refactor/tracing-logging-hygiene`
+- open the upstream PR against `dojoengine/torii:main`
 
 ## Context
 
@@ -66,6 +70,7 @@
 - `cargo check -p torii-processors -p torii-sqlite -p torii-storage`
 - `cargo test -p torii-sqlite model_optional -- --nocapture`
 - `PATH="/opt/homebrew/bin:$PATH" cargo test -p torii-storage`
+- `PATH="/opt/homebrew/bin:$PATH" cargo +nightly-2025-05-01 clippy -p torii-storage -p torii-processors -p torii-sqlite --tests -- -D warnings -D future-incompatible -D nonstandard-style -D rust-2018-idioms -D unused -D missing-debug-implementations -A clippy::uninlined_format_args`
 
 ## Open questions
 
