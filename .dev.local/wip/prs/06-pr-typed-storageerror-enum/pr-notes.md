@@ -10,8 +10,9 @@
 ## Status
 
 - draft packet created
-- code ready locally on `wip/rob`
+- code committed on `wip/rob` as `506502a6`
 - targeted validation passed locally
+- queued behind `01` through `05` for later promotion
 
 ## Ordering
 
@@ -20,12 +21,10 @@
 
 ## Promotion
 
-- pending final T009 code commit on `wip/rob`
-- later flow:
-  - branch from fresh `origin/main`
-  - cherry-pick the recorded T009 code commit
-  - push `refactor/typed-storageerror-enum`
-  - open the upstream PR against `dojoengine/torii:main`
+- branch from fresh `origin/main`
+- cherry-pick `506502a6`
+- push `refactor/typed-storageerror-enum`
+- open the upstream PR against `dojoengine/torii:main`
 
 ## Context
 

@@ -3,9 +3,9 @@
 - ship order: `06`
 - depends on: `none`
 - branch: `refactor/typed-storageerror-enum`
-- status: `in progress on wip/rob`
+- status: `queued behind 01 through 05 and ready to promote later`
 - upstream target: `dojoengine/torii:main`
-- promotion target: `pending T009 code commit on wip/rob`
+- promotion target: cherry-pick `506502a6` from `wip/rob`
 - scope: replace boxed dynamic storage errors with a typed `StorageError` enum for model lookup and remove the additive `model_optional()` path
 - tasks: see `tasks/`
 
