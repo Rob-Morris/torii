@@ -1,7 +1,7 @@
 # T017 — Task identifier hashing helper for multi-key patterns
 
 Status:
-- queue: `00-first`
+- assigned to `05-pr-task-identifier-hashing-helper-multi-key`
 
 Summary:
 - extend the task-identifier hashing helper to cover the `(from_address, keys[1], keys[2])`
