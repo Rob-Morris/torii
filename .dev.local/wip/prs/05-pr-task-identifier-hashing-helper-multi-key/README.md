@@ -3,9 +3,9 @@
 - ship order: `05`
 - depends on: `03-pr-task-identifier-hashing-helper`
 - branch: `refactor/task-identifier-hashing-helper-multi-key`
-- status: `in progress on wip/rob`
+- status: `queued behind 01 through 04 and ready to promote later`
 - upstream target: `dojoengine/torii:main`
-- promotion target: `pending T017 code commit on wip/rob`
+- promotion target: cherry-pick `73393d1f` from `wip/rob`
 - scope: centralize the repeated `(from_address, keys[1], keys[2])` task-ID hashing pattern in the `store_*` processors without widening helper semantics
 - tasks: see `tasks/`
 

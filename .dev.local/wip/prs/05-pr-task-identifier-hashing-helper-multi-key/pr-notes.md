@@ -10,8 +10,9 @@
 ## Status
 
 - draft packet created
-- code ready locally on `wip/rob`
+- code committed on `wip/rob` as `73393d1f`
 - targeted validation passed locally
+- queued behind `01` through `04` for later promotion
 
 ## Ordering
 
@@ -21,12 +22,10 @@
 
 ## Promotion
 
-- pending final T017 code commit on `wip/rob`
-- later flow:
-  - branch from fresh `origin/main` once `03` has shipped upstream
-  - cherry-pick the recorded T017 code commit
-  - push `refactor/task-identifier-hashing-helper-multi-key`
-  - open the upstream PR against `dojoengine/torii:main`
+- branch from fresh `origin/main` once `03` has shipped upstream
+- cherry-pick `73393d1f`
+- push `refactor/task-identifier-hashing-helper-multi-key`
+- open the upstream PR against `dojoengine/torii:main`
 
 ## Context
 
