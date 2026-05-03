@@ -1,7 +1,7 @@
 # T009 — Typed `StorageError` enum
 
 Status:
-- queue: `00-first`
+- assigned to `06-pr-typed-storageerror-enum`
 
 Summary:
 - replace boxed dynamic storage errors with a typed enum across the storage surface
